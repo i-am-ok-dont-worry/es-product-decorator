@@ -1,3 +1,5 @@
+const omit = require('lodash/omit');
+
 class ElasticsearchProductMapper {
 
     /**
@@ -6,7 +8,7 @@ class ElasticsearchProductMapper {
      * @param {Product[]} products
      * @returns {Promise<Product[]>}
      */
-    decorateProducts (products, mapBy = 'product_id') {
+    decorateProducts (products, mapBy = 'product_id', omitFields = []) {
         if (!products || !(products instanceof Array)) {
             return Promise.reject(new Error('Products should be a valid array'));
         }
@@ -31,7 +33,7 @@ class ElasticsearchProductMapper {
                 let output = products.reduce((acc, next) => {
                     const { [mapBy]: identifier, ...rest } = next;
                     const esProduct = docs.find(p => p.id === identifier);
-                    return [...acc, { ...rest, ...esProduct }];
+                    return [...acc, { ...rest, ...omit(esProduct, omitFields) }];
                 }, []);
 
                 return output;

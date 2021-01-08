@@ -3,21 +3,21 @@ class ElasticsearchProductMapper {
     /**
      * Decorates partial product object with full product data
      * fetched from ES
-     * @param {sku: string, product_id: string, last_ordered_data: Date} assortmentProducts
+     * @param {Product[]} products
      * @returns {Promise<Product[]>}
      */
-    decorateProducts (assortmentProducts) {
-        if (!assortmentProducts || !(assortmentProducts instanceof Array)) {
+    decorateProducts (products, mapBy = 'product_id') {
+        if (!products || !(products instanceof Array)) {
             return Promise.reject(new Error('Products should be a valid array'));
         }
 
-        const productIds = assortmentProducts.map(({ product_id }) => product_id);
+        const identifiers = products.map((product) => product['mapBy']);
         return this.es.search({
             index: `${this.index}_product`,
             body: {
                 query: {
                     terms: {
-                        id: [...productIds]
+                        id: [...identifiers]
                     }
                 }
             }
@@ -28,9 +28,9 @@ class ElasticsearchProductMapper {
 
                 // Decorate assortment list products which only contains partial
                 // product info with full ElasticSearch product data
-                let output = assortmentProducts.reduce((acc, next) => {
-                    const { product_id: productId, ...rest } = next;
-                    const esProduct = docs.find(p => p.id === productId);
+                let output = products.reduce((acc, next) => {
+                    const { [mapBy]: identifier, ...rest } = next;
+                    const esProduct = docs.find(p => p.id === identifier);
                     return [...acc, { ...rest, ...esProduct }];
                 }, []);
 

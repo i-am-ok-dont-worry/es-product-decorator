@@ -32,7 +32,7 @@ class ElasticsearchProductMapper {
                 // product info with full ElasticSearch product data
                 let output = products.reduce((acc, next) => {
                     const { [mapBy]: identifier, ...rest } = next;
-                    const esProduct = docs.find(p => p.id === identifier);
+                    const esProduct = docs.find(p => String(p.id) === String(identifier));
                     return [...acc, { ...rest, ...omit(esProduct, omitFields) }];
                 }, []);
 

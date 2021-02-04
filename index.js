@@ -13,9 +13,10 @@ class ElasticsearchProductMapper {
             return Promise.reject(new Error('Products should be a valid array'));
         }
 
-        const identifiers = products.map((product) => product[mapBy]);
+        const identifiers = products.map((product) => String(product[mapBy]));
         return this.es.search({
             index: `${this.index}_product`,
+            size: 1000,
             body: {
                 query: {
                     terms: {

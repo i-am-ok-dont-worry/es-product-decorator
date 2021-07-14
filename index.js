@@ -14,13 +14,14 @@ class ElasticsearchProductMapper {
         }
 
         const identifiers = products.map((product) => String(product[mapBy]));
+        const mapFrom = mapBy === 'sku' ? 'sku_c' : 'id';
         return this.es.search({
             index: `${this.index}_product`,
             size: 1000,
             body: {
                 query: {
                     terms: {
-                        id: [...identifiers]
+                        [mapFrom]: [...identifiers]
                     }
                 }
             }
@@ -33,7 +34,7 @@ class ElasticsearchProductMapper {
                 // product info with full ElasticSearch product data
                 let output = products.reduce((acc, next) => {
                     const { [mapBy]: identifier, ...rest } = next;
-                    const esProduct = docs.find(p => String(p.id) === String(identifier));
+                    const esProduct = docs.find(p => String(p[mapBy]) === String(identifier));
                     return [...acc, { ...rest, [mapBy]: identifier, ...omit(esProduct, omitFields) }];
                 }, []);
 

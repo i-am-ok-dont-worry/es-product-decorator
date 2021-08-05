@@ -1,4 +1,5 @@
 const omit = require('lodash/omit');
+const merge = require('lodash/merge');
 
 class ElasticsearchProductMapper {
 
@@ -35,7 +36,8 @@ class ElasticsearchProductMapper {
                 let output = products.reduce((acc, next) => {
                     const { [mapBy]: identifier, ...rest } = next;
                     const esProduct = docs.find(p => String(p[mapFrom]) === String(identifier));
-                    return [...acc, { ...rest, [mapBy]: identifier, ...omit(esProduct, omitFields) }];
+                    const extension_attributes = merge(next.extension_attributes, esProduct.extension_attributes);
+                    return [...acc, { ...rest, [mapBy]: identifier, ...omit(esProduct, omitFields), extension_attributes }];
                 }, []);
 
                 return output;

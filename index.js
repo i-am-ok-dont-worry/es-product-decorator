@@ -16,6 +16,7 @@ class ElasticsearchProductMapper {
 
         const identifiers = products.map((product) => String(product[mapBy]));
         const mapFrom = mapBy === 'sku' ? 'sku_c' : 'id';
+        const compareBy = mapBy === 'product_id' ? 'id' : mapBy;
         return this.es.search({
             index: `${this.index}_product`,
             size: 1000,
@@ -35,7 +36,7 @@ class ElasticsearchProductMapper {
                 // product info with full ElasticSearch product data
                 let output = products.reduce((acc, next) => {
                     const { [mapBy]: identifier, ...rest } = next;
-                    const esProduct = docs.find(p => String(p[mapFrom]) === String(identifier));
+                    const esProduct = docs.find(p => String(p[compareBy]) === String(identifier));
                     const extension_attributes = merge(next.extension_attributes, esProduct.extension_attributes);
                     return [...acc, { ...rest, [mapBy]: identifier, ...omit(esProduct, omitFields), extension_attributes }];
                 }, []);

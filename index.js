@@ -9,7 +9,7 @@ class ElasticsearchProductMapper {
      * @param {Product[]} products
      * @returns {Promise<Product[]>}
      */
-    decorateProducts (products, mapBy = 'product_id', omitFields = []) {
+    decorateProducts (products, mapBy = 'product_id', omitFields = [], minimumShouldMatch) {
         if (!products || !(products instanceof Array)) {
             return Promise.reject(new Error('Products should be a valid array'));
         }
@@ -17,17 +17,7 @@ class ElasticsearchProductMapper {
         const identifiers = products.map((product) => String(product[mapBy]));
         const mapFrom = mapBy === 'sku' ? 'sku_c' : 'id';
         const compareBy = mapBy === 'product_id' ? 'id' : mapBy;
-        return this.es.search({
-            index: `${this.index}_product`,
-            size: 1000,
-            body: {
-                query: {
-                    terms: {
-                        [mapFrom]: [...identifiers]
-                    }
-                }
-            }
-        })
+        return this.es.search(this.getQuery(this.index, minimumShouldMatch ? mapBy : mapFrom, identifiers, minimumShouldMatch))
             .then(res => {
                 const { hits: resp } = res.body;
                 const docs = resp.hits.map(doc => doc._source);
@@ -55,6 +45,37 @@ class ElasticsearchProductMapper {
             }
         } else {
             this.index = config.elasticsearch.index;
+        }
+    }
+
+    getQuery(index, mapBy, identifier, minimumShouldMatch) {
+        if (minimumShouldMatch && typeof minimumShouldMatch === 'string') {
+            return {
+                index: `${index}_product`,
+                size: 1000,
+                body: {
+                    query: {
+                        match: {
+                            [mapBy]: {
+                                query: identifier,
+                                minimum_should_match: minimumShouldMatch
+                            }
+                        }
+                    }
+                }
+            };
+        } else {
+            return {
+                index: `${index}_product`,
+                size: 1000,
+                body: {
+                    query: {
+                        terms: {
+                            [mapBy]: [...identifier]
+                        }
+                    }
+                }
+            };
         }
     }
 

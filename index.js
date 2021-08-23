@@ -14,7 +14,18 @@ class ElasticsearchProductMapper {
             return Promise.reject(new Error('Products should be a valid array'));
         }
 
-        const identifiers = products.map((product) => String(product[mapBy]));
+        const identifiers = products.map((product) => {
+            // Support for extension_attributes
+            if (product.extension_attributes) {
+                if (mapBy === 'product_id') {
+                    return String(product.extension_attributes.product_id);
+                } else {
+                    return String(product.extension_attributes.product_sku);
+                }
+            }
+
+            return String(product[mapBy]);
+        });
         const mapFrom = mapBy === 'sku' ? 'sku_c' : 'id';
         const compareBy = mapBy === 'product_id' ? 'id' : mapBy;
         return this.es.search({

@@ -19,12 +19,12 @@ class ElasticsearchProductMapper {
             if (product.extension_attributes) {
                 if (mapBy === 'product_id') {
                     // Overwrite product id for cart items that had custom_options set
-                    product.id = product.extension_attributes.product_id;
-                    return String(product.extension_attributes.product_id);
+                    product.id = product.extension_attributes.item_product_id;
+                    return String(product.extension_attributes.item_product_id);
                 } else {
                     // Overwrite product sku for cart items that had custom_options set
-                    product.sku = product.extension_attributes.product_sku;
-                    return String(product.extension_attributes.product_sku);
+                    product.sku = product.extension_attributes.item_product_sku;
+                    return String(product.extension_attributes.item_product_sku);
                 }
             }
 

@@ -52,7 +52,7 @@ class ElasticsearchProductMapper {
                 let output = products.reduce((acc, next) => {
                     const { [mapBy]: identifier, ...rest } = next;
                     const esProduct = docs.find(p => String(p[compareBy]) === String(identifier));
-                    const extension_attributes = merge(next.extension_attributes, esProduct.extension_attributes);
+                    const extension_attributes = merge(next.extension_attributes, esProduct ? esProduct.extension_attributes : {});
                     return [...acc, { ...rest, [mapBy]: identifier, ...omit(esProduct, omitFields), extension_attributes }];
                 }, []);
 
@@ -62,11 +62,16 @@ class ElasticsearchProductMapper {
 
     setIndex (storeCode, config) {
         if (storeCode) {
+            const isDefaultStore = config.storeViews.default_store_code
+                ? config.storeViews.default_store_code === storeCode
+                : config.availableStores[0] === storeCode;
+
             const storeView = config.storeViews[storeCode];
+
             if (storeView && storeView.hasOwnProperty('elasticsearch')) {
                 this.index = storeView.elasticsearch.index;
             } else if (config.hasOwnProperty('elasticsearch')) {
-                this.index = config.elasticsearch.index;
+                this.index = isDefaultStore ? `${config.elasticsearch.index}` : `${config.elasticsearch.index}_${storeCode}`;
             }
         } else {
             this.index = config.elasticsearch.index;
